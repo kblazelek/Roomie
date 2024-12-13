@@ -1,0 +1,73 @@
+﻿@page "/rooms"
+@rendermode InteractiveServer
+@attribute [StreamRendering(true)]
+@using System.Collections.Generic
+@using Roomie.Domain
+@using Roomie.Services
+
+@if (buildings == null)
+{
+    <h1>Loading all the rooms</h1>
+}
+else
+{
+    @foreach (var building in buildings)
+    {
+        <h4>@building.Name</h4>
+        <ul>
+            @foreach (var feature in building.Features)
+            {
+                <li>@feature</li>
+            }
+        </ul>
+
+        <h5>Available Rooms:</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Room Number</th>
+                    <th>Floor</th>
+                    <th>Features</th>
+                    <th>Price/Night (€)</th>
+                    <th>Max People</th>
+                    <th />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var room in building.Rooms)
+                {
+                    <tr>
+                        <td>@room.Number</td>
+                        <td>@room.Floor</td>
+                        <td>
+                            <ul>
+                                @foreach (var feature in room.Features)
+                                {
+                                    <li>@feature</li>
+                                }
+                            </ul>
+                        </td>
+                        <td>@room.PricePerNight</td>
+                        <td>@room.MaxPeople</td>
+                        <td>
+                            <a href="@($"book/{building.Id}/{room.Number}")" class="btn btn-outline-primary btn-sm mb-1">
+                                Book
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private List<Building> buildings = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(2000);
+        await base.OnInitializedAsync();
+        buildings = new MockDataService().Buildings;
+    }
+}

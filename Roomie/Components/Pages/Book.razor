@@ -1,0 +1,75 @@
+﻿@page "/book/{BuildingId:int}/{RoomNumber:int}"
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
+@using System.Collections.Generic
+@using Roomie.Domain
+@using Roomie.Services
+
+@if(Building == null)
+{
+    <h1>Loading room details</h1>
+}
+else
+{
+    <h4>@Building.Name</h4>
+    <ul>
+        @foreach (var feature in Building.Features)
+        {
+            <li>@feature</li>
+        }
+    </ul>
+
+    <h5>Available Rooms:</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Room Number</th>
+                <th>Floor</th>
+                <th>Features</th>
+                <th>Price/Night (€)</th>
+                <th>Max People</th>
+                <th />
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Room.Number</td>
+                <td>@Room.Floor</td>
+                <td>
+                    <ul>
+                        @foreach (var feature in Room.Features)
+                        {
+                            <li>@feature</li>
+                        }
+                    </ul>
+                </td>
+                <td>@Room.PricePerNight</td>
+                <td>@Room.MaxPeople</td>
+                <td><button class="btn btn-primary" @onclick="() => BookRoom()">Book</button></td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    public Building Building { get; set; } = default!;
+    public Room Room { get; set; } = default!;
+    [Parameter]
+    public int BuildingId { get; set; }
+    [Parameter]
+    public int RoomNumber { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(2000);
+        var dataService = new MockDataService();
+        Building = dataService.Buildings.First((x) => x.Id == BuildingId);
+        Room = Building.Rooms.First((x) => x.Number == RoomNumber);
+        await base.OnInitializedAsync();
+    }
+
+    private async Task BookRoom()
+    {
+        Console.WriteLine($"Booking room {Room.Number}");
+    }
+}
