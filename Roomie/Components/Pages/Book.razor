@@ -2,10 +2,12 @@
 @attribute [StreamRendering(true)]
 @rendermode InteractiveServer
 @using System.Collections.Generic
+@using Amazon.DynamoDBv2.DataModel
 @using Roomie.Domain
 @using Roomie.Services
+@using System.ComponentModel.DataAnnotations
 
-@if(Building == null)
+@if (Building == null)
 {
     <h1>Loading room details</h1>
 }
@@ -28,7 +30,6 @@ else
                 <th>Features</th>
                 <th>Price/Night (€)</th>
                 <th>Max People</th>
-                <th />
             </tr>
         </thead>
         <tbody>
@@ -45,10 +46,14 @@ else
                 </td>
                 <td>@Room.PricePerNight</td>
                 <td>@Room.MaxPeople</td>
-                <td><button class="btn btn-primary" @onclick="() => BookRoom()">Book</button></td>
             </tr>
         </tbody>
     </table>
+    <EditForm Model="@booking" OnValidSubmit="BookRoom"> <DataAnnotationsValidator /> <ValidationSummary /> <div class="mb-3"> <label for="firstName" class="form-label">First Name</label> <InputText id="firstName" class="form-control" @bind-Value="booking.FirstName" /> <ValidationMessage For="@(() => booking.FirstName)" /> </div> <div class="mb-3"> <label for="lastName" class="form-label">Last Name</label> <InputText id="lastName" class="form-control" @bind-Value="booking.LastName" /> <ValidationMessage For="@(() => booking.LastName)" /> </div> <div class="mb-3"> <label for="email" class="form-label">Email Address</label> <InputText id="email" type="email" class="form-control" @bind-Value="booking.Email" /> <ValidationMessage For="@(() => booking.Email)" /> </div> <button type="submit" class="btn btn-primary">Book Room</button> </EditForm>
+    @if (showPopup)
+    {
+        <div class="modal" tabindex="-1" style="display:block;"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title">Booking information</h5> <button type="button" class="btn-close" aria-label="Close" @onclick="ClosePopup"></button> </div> <div class="modal-body"> <p>@popupMessage</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" @onclick="ClosePopup">Close</button> </div> </div> </div> </div>
+    }
 }
 
 @code {
@@ -58,18 +63,50 @@ else
     public int BuildingId { get; set; }
     [Parameter]
     public int RoomNumber { get; set; }
+    private string popupMessage { get; set; } = "Your room has been successfully booked!";
+
+    [Inject]
+    public IDynamoDBContext Context { get; set; } = default!;
+
+    private List<Booking> bookings = default!;
+    private bool showPopup = false;
+    private BookingModel booking = new BookingModel();
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Delay(2000);
+        bookings = await Context.ScanAsync<Booking>(default).GetRemainingAsync();
         var dataService = new MockDataService();
         Building = dataService.Buildings.First((x) => x.Id == BuildingId);
         Room = Building.Rooms.First((x) => x.Number == RoomNumber);
         await base.OnInitializedAsync();
     }
 
+    private void ClosePopup() { showPopup = false; }
+
     private async Task BookRoom()
     {
         Console.WriteLine($"Booking room {Room.Number}");
+        var existingBooking = await Context.LoadAsync<Booking>(BuildingId, RoomNumber);
+        if (existingBooking != null)
+        {
+            popupMessage = "Booking failed, because there is already a booking for this room";
+        }
+        else
+        {
+            await Context.SaveAsync<Booking>(new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email });
+            popupMessage = "Your room has been successfully booked!";
+        }
+        showPopup = true;
+    }
+
+    public class BookingModel
+    {
+        [Required(ErrorMessage = "First name is required")]
+        public string FirstName { get; set; }
+        [Required(ErrorMessage = "Last name is required")]
+        public string LastName { get; set; }
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; }
     }
 }

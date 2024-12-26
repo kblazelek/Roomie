@@ -71,16 +71,6 @@ namespace Roomie.Services
 
             var internat = new Building(2, "Internat", internatRooms, internatFeatures);
             Buildings.Add(internat);
-
-            // Chateau
-            var chaletRooms = new List<Room>()
-            {
-                new Room(1, 0, new List<string> { "1 double bed (160 cm)", "shower" }, 77, 2),
-                new Room(2, 0, new List<string> { "Suite with lounge (sofa bed)", "shower" }, 95, 3),
-                new Room(3, 0, new List<string> { "Small suite with lounge", "bath" }, 85, 2),
-                new Room(4, 0, new List<string> { "1 double bed (140 cm)", "shower" }, 77, 2),
-                new Room(5, 0, new List<string> { "Small suite with lounge", "shower" }, 85, 2)
-            };
         }
     }
 }
