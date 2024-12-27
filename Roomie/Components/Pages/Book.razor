@@ -1,10 +1,11 @@
 ﻿@page "/book/{BuildingId:int}/{RoomNumber:int}"
+@using Amazon.DynamoDBv2.DataModel
+@using Roomie.Domain
+@using Roomie.Dto
+@using Roomie.Services
 @attribute [StreamRendering(true)]
 @rendermode InteractiveServer
 @using System.Collections.Generic
-@using Amazon.DynamoDBv2.DataModel
-@using Roomie.Domain
-@using Roomie.Services
 @using System.ComponentModel.DataAnnotations
 
 @if (Building == null)
@@ -68,6 +69,9 @@ else
     [Inject]
     public IDynamoDBContext Context { get; set; } = default!;
 
+    [Inject]
+    public IMailService _mailService { get; set; } = default!;
+
     private List<Booking> bookings = default!;
     private bool showPopup = false;
     private BookingModel booking = new BookingModel();
@@ -93,20 +97,12 @@ else
         }
         else
         {
-            await Context.SaveAsync<Booking>(new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email });
+            string token = Guid.NewGuid().ToString();
+            await Context.SaveAsync<Booking>(new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email, Token = token });
+            var request = new SendEmailRequest(booking.Email, "Your Booking Details", $"Edit booking using this link: http://roomie-dev.eba-gcespxrt.eu-north-1.elasticbeanstalk.com/edit-booking/{BuildingId}/{RoomNumber}/{token}/{booking.Email}");
+            await _mailService.SendEmailAsync(request);
             popupMessage = "Your room has been successfully booked!";
         }
         showPopup = true;
-    }
-
-    public class BookingModel
-    {
-        [Required(ErrorMessage = "First name is required")]
-        public string FirstName { get; set; }
-        [Required(ErrorMessage = "Last name is required")]
-        public string LastName { get; set; }
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email address")]
-        public string Email { get; set; }
     }
 }

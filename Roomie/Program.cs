@@ -1,6 +1,8 @@
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2;
 using Roomie.Components;
+using Roomie.Options;
+using Roomie.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,11 @@ var awsOptions = builder.Configuration.GetAWSOptions();
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
+builder.Services.Configure<GmailOptions>(
+    builder.Configuration.GetSection(GmailOptions.GmailOptionsKey));
+builder.Services.AddScoped<IMailService, GmailService>();
+builder.Configuration.AddSystemsManager($"/Roomie/");
+builder.Services.Configure<GmailSecrets>(builder.Configuration.GetSection($"Gmail"));
 
 var app = builder.Build();
 

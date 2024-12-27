@@ -15,5 +15,7 @@ namespace Roomie.Domain
         public string LastName { get; set; }
         [DynamoDBProperty("Email")]
         public string Email { get; set; }
+        [DynamoDBProperty("Token")]
+        public string Token { get; set; }
     }
 }
