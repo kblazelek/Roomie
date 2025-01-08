@@ -1,5 +1,6 @@
 ﻿@page "/book/{BuildingId:int}/{RoomNumber:int}"
 @using Amazon.DynamoDBv2.DataModel
+@using Roomie.Components.Layout
 @using Roomie.Domain
 @using Roomie.Dto
 @using Roomie.Services
@@ -8,54 +9,74 @@
 @using System.Collections.Generic
 @using System.ComponentModel.DataAnnotations
 
-@if (Building == null)
-{
-    <h1>Loading room details</h1>
-}
-else
-{
-    <h4>@Building.Name</h4>
-    <ul>
-        @foreach (var feature in Building.Features)
-        {
-            <li>@feature</li>
-        }
-    </ul>
-
-    <h5>Available Rooms:</h5>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Room Number</th>
-                <th>Floor</th>
-                <th>Features</th>
-                <th>Price/Night (€)</th>
-                <th>Max People</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@Room.Number</td>
-                <td>@Room.Floor</td>
-                <td>
-                    <ul>
-                        @foreach (var feature in Room.Features)
-                        {
-                            <li>@feature</li>
-                        }
-                    </ul>
-                </td>
-                <td>@Room.PricePerNight</td>
-                <td>@Room.MaxPeople</td>
-            </tr>
-        </tbody>
-    </table>
-    <EditForm Model="@booking" OnValidSubmit="BookRoom"> <DataAnnotationsValidator /> <ValidationSummary /> <div class="mb-3"> <label for="firstName" class="form-label">First Name</label> <InputText id="firstName" class="form-control" @bind-Value="booking.FirstName" /> <ValidationMessage For="@(() => booking.FirstName)" /> </div> <div class="mb-3"> <label for="lastName" class="form-label">Last Name</label> <InputText id="lastName" class="form-control" @bind-Value="booking.LastName" /> <ValidationMessage For="@(() => booking.LastName)" /> </div> <div class="mb-3"> <label for="email" class="form-label">Email Address</label> <InputText id="email" type="email" class="form-control" @bind-Value="booking.Email" /> <ValidationMessage For="@(() => booking.Email)" /> </div> <button type="submit" class="btn btn-primary">Book Room</button> </EditForm>
-    @if (showPopup)
+<Header />
+<article class="content px-4">
+    @if (Building == null)
     {
-        <div class="modal" tabindex="-1" style="display:block;"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title">Booking information</h5> <button type="button" class="btn-close" aria-label="Close" @onclick="ClosePopup"></button> </div> <div class="modal-body"> <p>@popupMessage</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" @onclick="ClosePopup">Close</button> </div> </div> </div> </div>
+        <h1>Loading room details</h1>
     }
-}
+    else
+    {
+        <h4>@Building.Name</h4>
+        <ul>
+            @foreach (var feature in Building.Features)
+            {
+                <li>@feature</li>
+            }
+        </ul>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Room Number</th>
+                    <th>Floor</th>
+                    <th>Features</th>
+                    <th>Price/Night (€)</th>
+                    <th>Max People</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@Room.Number</td>
+                    <td>@Room.Floor</td>
+                    <td>
+                        <ul>
+                            @foreach (var feature in Room.Features)
+                            {
+                                <li>@feature</li>
+                            }
+                        </ul>
+                    </td>
+                    <td>@Room.PricePerNight</td>
+                    <td>@Room.MaxPeople</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="d-flex flex-column align-items-center justify-content-center text-center" style="margin: 4px">
+            <EditForm Model="@booking" OnValidSubmit="BookRoom">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <InputText id="firstName" class="form-control" @bind-Value="booking.FirstName" />
+                    <ValidationMessage For="@(() => booking.FirstName)" />
+                </div> <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <InputText id="lastName" class="form-control" @bind-Value="booking.LastName" />
+                    <ValidationMessage For="@(() => booking.LastName)" />
+                </div> <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <InputText id="email" type="email" class="form-control" @bind-Value="booking.Email" />
+                    <ValidationMessage For="@(() => booking.Email)" />
+                </div> <button type="submit" class="btn btn-primary">Book Room</button>
+            </EditForm>
+        </div>
+        @if (showPopup)
+        {
+            <div class="modal" tabindex="-1" style="display:block;"> <div class="modal-dialog"> <div class="modal-content"> <div class="modal-header"> <h5 class="modal-title">Booking information</h5> <button type="button" class="btn-close" aria-label="Close" @onclick="ClosePopup"></button> </div> <div class="modal-body"> <p>@popupMessage</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" @onclick="ClosePopup">Close</button> </div> </div> </div> </div>
+        }
+    }
+</article>
 
 @code {
     public Building Building { get; set; } = default!;

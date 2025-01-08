@@ -3,71 +3,78 @@
 @attribute [StreamRendering(true)]
 @using System.Collections.Generic
 @using Amazon.DynamoDBv2.DataModel
+@using Roomie.Components.Layout
 @using Roomie.Domain
 @using Roomie.Services
 
-@if (buildings == null)
-{
-    <h1>Loading all the rooms</h1>
-}
-else
-{
-    @foreach (var building in buildings)
-    {
-        <h4>@building.Name</h4>
-        <ul>
-            @foreach (var feature in building.Features)
-            {
-                <li>@feature</li>
-            }
-        </ul>
 
-        <h5>Available Rooms:</h5>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Room Number</th>
-                    <th>Floor</th>
-                    <th>Features</th>
-                    <th>Price/Night (€)</th>
-                    <th>Max People</th>
-                    <th />
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var room in building.Rooms)
-                {
-                    <tr>
-                        <td>@room.Number</td>
-                        <td>@room.Floor</td>
-                        <td>
-                            <ul>
-                                @foreach (var feature in room.Features)
-                                {
-                                    <li>@feature</li>
-                                }
-                            </ul>
-                        </td>
-                        <td>@room.PricePerNight</td>
-                        <td>@room.MaxPeople</td>
-                        <td>
-                            @if(bookings.Any((x) => x.BuildingId == building.Id && x.RoomNumber == room.Number))
-                            {
-                                <button class="btn btn-secondary" disabled>Already booked</button>
-                            }
-                            else
-                            {
-                                <a href="@($"book/{building.Id}/{room.Number}")" class="btn btn-outline-primary btn-sm mb-1">
-                                    Book
-                                </a>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+<Header />
+
+<article class="content px-4">
+
+    @if (buildings == null)
+    {
+        <h1>Loading all the rooms</h1>
     }
-}
+    else
+    {
+        @foreach (var building in buildings)
+        {
+            <h4>@building.Name</h4>
+            <ul>
+                @foreach (var feature in building.Features)
+                {
+                    <li>@feature</li>
+                }
+            </ul>
+
+            <h5>Available Rooms:</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Room Number</th>
+                        <th>Floor</th>
+                        <th>Features</th>
+                        <th>Price/Night (€)</th>
+                        <th>Max People</th>
+                        <th />
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var room in building.Rooms)
+                    {
+                        <tr>
+                            <td>@room.Number</td>
+                            <td>@room.Floor</td>
+                            <td>
+                                <ul>
+                                    @foreach (var feature in room.Features)
+                                    {
+                                        <li>@feature</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>@room.PricePerNight</td>
+                            <td>@room.MaxPeople</td>
+                            <td>
+                                @if (bookings.Any((x) => x.BuildingId == building.Id && x.RoomNumber == room.Number))
+                                {
+                                    <button class="btn btn-secondary" disabled>Already booked</button>
+                                }
+                                else
+                                {
+                                    <a href="@($"book/{building.Id}/{room.Number}")" class="btn btn-outline-primary btn-sm mb-1">
+                                        Book
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+</article>
 
 @code {
     private List<Building> buildings = default!;
