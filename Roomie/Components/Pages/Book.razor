@@ -99,7 +99,7 @@ else
         {
             string token = Guid.NewGuid().ToString();
             await Context.SaveAsync<Booking>(new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email, Token = token });
-            var request = new SendEmailRequest(booking.Email, "Your Booking Details", $"Edit booking using this link: http://roomie-dev.eba-gcespxrt.eu-north-1.elasticbeanstalk.com/edit-booking/{BuildingId}/{RoomNumber}/{token}/{booking.Email}");
+            var request = new SendEmailRequest(booking.Email, "Your Booking Details", $"Edit booking using this link: https://celinesaratwedding.com/edit-booking/{BuildingId}/{RoomNumber}/{token}/{booking.Email}");
             await _mailService.SendEmailAsync(request);
             popupMessage = "Your room has been successfully booked!";
         }
