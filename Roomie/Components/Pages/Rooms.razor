@@ -6,6 +6,7 @@
 @using Roomie.Components.Layout
 @using Roomie.Domain
 @using Roomie.Services
+@using Roomie.Utils
 
 
 <Header />
@@ -33,9 +34,8 @@
                 <thead>
                     <tr>
                         <th>Room Number</th>
-                        <th>Floor</th>
                         <th>Features</th>
-                        <th>Price/Night (€)</th>
+                        <th>Price per night (€)</th>
                         <th>Max People</th>
                         <th />
                     </tr>
@@ -44,8 +44,7 @@
                     @foreach (var room in building.Rooms)
                     {
                         <tr>
-                            <td>@room.Number</td>
-                            <td>@room.Floor</td>
+                            <td>@room.Number (@RoomUtilities.GetFloorName(@room.Floor))</td>
                             <td>
                                 <ul>
                                     @foreach (var feature in room.Features)

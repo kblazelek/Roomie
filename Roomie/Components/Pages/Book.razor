@@ -9,6 +9,7 @@
 @using System.Collections.Generic
 @using System.ComponentModel.DataAnnotations
 @using System.Text
+@using Roomie.Utils
 
 <Header />
 <article class="content px-4">
@@ -30,16 +31,14 @@
             <thead>
                 <tr>
                     <th>Room Number</th>
-                    <th>Floor</th>
                     <th>Features</th>
-                    <th>Price/Night (€)</th>
+                    <th>Price per night (€)</th>
                     <th>Max People</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>@Room.Number</td>
-                    <td>@Room.Floor</td>
+                    <td>@Room.Number (@RoomUtilities.GetFloorName(@Room.Floor))</td>
                     <td>
                         <ul>
                             @foreach (var feature in Room.Features)

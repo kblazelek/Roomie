@@ -106,10 +106,10 @@
         if (existingBooking != null && existingBooking.Token == Token && existingBooking.Email == Email)
         {
             bookingFormData = new BookingModel() { Email = existingBooking.Email, FirstName = existingBooking.FirstName, LastName = existingBooking.LastName, DayChoice = existingBooking.DayChoice };
-            CalculateTotalPrice(existingBooking.DayChoice);
             var roomService = new RoomService();
             Building = roomService.Buildings.First((x) => x.Id == BuildingId);
             Room = Building.Rooms.First((x) => x.Number == RoomNumber);
+            CalculateTotalPrice(existingBooking.DayChoice);
             isBookingLoaded = true;
         }
         else
