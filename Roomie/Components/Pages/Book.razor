@@ -8,6 +8,7 @@
 @rendermode InteractiveServer
 @using System.Collections.Generic
 @using System.ComponentModel.DataAnnotations
+@using System.Text
 
 <Header />
 <article class="content px-4">
@@ -53,22 +54,39 @@
             </tbody>
         </table>
         <div class="d-flex flex-column align-items-center justify-content-center text-center" style="margin: 4px">
-            <EditForm Model="@booking" OnValidSubmit="BookRoom">
+            <EditForm Model="@bookingFormData" OnValidSubmit="BookRoom">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="mb-3">
                     <label for="firstName" class="form-label">First Name</label>
-                    <InputText id="firstName" class="form-control" @bind-Value="booking.FirstName" />
-                    <ValidationMessage For="@(() => booking.FirstName)" />
+                    <InputText id="firstName" class="form-control" @bind-Value="bookingFormData.FirstName" />
+                    <ValidationMessage For="@(() => bookingFormData.FirstName)" />
                 </div> <div class="mb-3">
                     <label for="lastName" class="form-label">Last Name</label>
-                    <InputText id="lastName" class="form-control" @bind-Value="booking.LastName" />
-                    <ValidationMessage For="@(() => booking.LastName)" />
+                    <InputText id="lastName" class="form-control" @bind-Value="bookingFormData.LastName" />
+                    <ValidationMessage For="@(() => bookingFormData.LastName)" />
                 </div> <div class="mb-3">
                     <label for="email" class="form-label">Email Address</label>
-                    <InputText id="email" type="email" class="form-control" @bind-Value="booking.Email" />
-                    <ValidationMessage For="@(() => booking.Email)" />
-                </div> <button type="submit" class="btn btn-primary">Book Room</button>
+                    <InputText id="email" type="email" class="form-control" @bind-Value="bookingFormData.Email" />
+                    <ValidationMessage For="@(() => bookingFormData.Email)" />
+                </div>
+                <div>
+                    <label>Choice of Days:</label>
+                    <InputSelect ValueExpression="@(()=>bookingFormData.DayChoice)"
+                    Value="@bookingFormData.DayChoice"
+                    ValueChanged="@((string value) => CalculateTotalPrice(value))">
+                        <option value="">Select booking day(s)...</option>
+                        <option value="4th July 2025">Friday (4th July 2025)</option>
+                        <option value="5th July 2025">Saturday (5th July 2025)</option>
+                        <option value="4th and 5th July 2025">Friday (4th July 2025) and Saturday (5th July 2025)</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => bookingFormData.DayChoice)" />
+                </div>
+                <div>
+                    <label>Total Price:</label>
+                    <span>@totalPrice €</span>
+                </div>
+                <button type="submit" class="btn btn-primary">Book Room</button>
             </EditForm>
         </div>
         @if (showPopup)
@@ -95,7 +113,8 @@
 
     private List<Booking> bookings = default!;
     private bool showPopup = false;
-    private BookingModel booking = new BookingModel();
+    private BookingModel bookingFormData = new BookingModel();
+    private decimal totalPrice;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,6 +123,26 @@
         Building = dataService.Buildings.First((x) => x.Id == BuildingId);
         Room = Building.Rooms.First((x) => x.Number == RoomNumber);
         await base.OnInitializedAsync();
+    }
+
+    private void CalculateTotalPrice(string dayChoice)
+    {
+        switch (dayChoice)
+        {
+            case "4th July 2025":
+                totalPrice = Room.PricePerNight;
+                break;
+            case "5th July 2025":
+                totalPrice = Room.PricePerNight;
+                break;
+            case "4th and 5th July 2025":
+                totalPrice = Room.PricePerNight + 45;
+                break;
+            default:
+                totalPrice = 0m;
+                break;
+        }
+        bookingFormData.DayChoice = dayChoice;
     }
 
     private void ClosePopup() { showPopup = false; }
@@ -119,9 +158,10 @@
         else
         {
             string token = Guid.NewGuid().ToString();
-            await Context.SaveAsync<Booking>(new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email, Token = token });
-            var request = new SendEmailRequest(booking.Email, "Your Booking Details", $"Edit booking using this link: https://celinesaratwedding.com/edit-booking/{BuildingId}/{RoomNumber}/{token}/{booking.Email}");
-            await _mailService.SendEmailAsync(request);
+            var booking = new Booking() { BuildingId = BuildingId, RoomNumber = RoomNumber, FirstName = bookingFormData.FirstName, LastName = bookingFormData.LastName, Email = bookingFormData.Email, Token = token, DayChoice = bookingFormData.DayChoice };
+            await Context.SaveAsync<Booking>(booking);
+            var confirmationEmailRequest = new EmailBuilder().CreateBookingConfirmationEmail(Building, booking, totalPrice);
+            await _mailService.SendEmailAsync(confirmationEmailRequest);
             popupMessage = "Your room has been successfully booked!";
         }
         showPopup = true;

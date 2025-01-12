@@ -11,5 +11,7 @@ namespace Roomie.Dto
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; }
+        [Required(ErrorMessage = "Choice of booking day(s) is required")]
+        public string DayChoice { get; set; }
     }
 }

@@ -1,15 +1,13 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
-
-<div class="bg-image d-flex flex-column align-items-center justify-content-center text-center"
-     style="
-    background-image: url('/Images/saratceline.png');
-    height: 100vh;
-  ">
-    <h1 style="color: black">Welcome to Our Wedding Room Booking Service!</h1>
-    <h2 style="color: black"> We're delighted to have you here. </h2>
-    <a href="@($"rooms/")" class="btn btn-primary btn-lg">
-        Book a room
-    </a>
+<div class="bg-image"
+     style="background:url('/Images/celine_sarat_home.jpg') no-repeat center center fixed; background-size: cover;  height: 100vh;">
+    <div class="mask position-absolute top-0 end-0 bottom-0 start-0 d-flex flex-column align-items-center justify-content-center text-center" style="background-color: rgba(0, 0, 0, 0.6)">
+        <h1 class="elegant-font" style="color: white">Welcome to Our Wedding Room Booking Service!</h1>
+        <h2 class="elegant-font" style="color: white"> We're delighted to have you here. </h2>
+        <a href="@($"rooms/")" class="btn btn-primary btn-lg">
+            Book a room
+        </a>
+    </div>
 </div>

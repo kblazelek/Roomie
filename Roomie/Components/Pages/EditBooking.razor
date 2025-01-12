@@ -3,51 +3,73 @@
 @attribute [StreamRendering(true)]
 @using System.ComponentModel.DataAnnotations
 @using Amazon.DynamoDBv2.DataModel
+@using Roomie.Components.Layout
 @using Roomie.Domain
 @using Roomie.Dto
+@using Roomie.Services
 @inject NavigationManager Navigation
 
-<h3>Edit Your Booking</h3>
+<Header />
+<article class="content px-4">
+    <h3>Edit Your Booking</h3>
 
-@if (!isBookingLoaded)
-{
-    <h1>Loading booking details</h1>
-}
-
-@if (isBookingLoaded)
-{
-    <EditForm Model="@booking" OnValidSubmit="SaveBooking">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="mb-3">
-            <label for="firstName" class="form-label">First Name</label>
-            <InputText id="firstName" class="form-control" @bind-Value="booking.FirstName" />
-            <ValidationMessage For="@(() => booking.FirstName)" />
-        </div>
-
-        <div class="mb-3">
-            <label for="lastName" class="form-label">Last Name</label>
-            <InputText id="lastName" class="form-control" @bind-Value="booking.LastName" />
-            <ValidationMessage For="@(() => booking.LastName)" />
-        </div>
-
-        <div class="mb-3">
-            <label for="email" class="form-label">Email Address</label>
-            <InputText id="email" type="email" class="form-control" @bind-Value="booking.Email" disabled />
-            <ValidationMessage For="@(() => booking.Email)" />
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-    </EditForm>
-
-    @if (showPopup)
+    @if (!isBookingLoaded)
     {
-        <div class="alert alert-success mt-3">
-            @popupMessage
-        </div>
+        <h1>Loading booking details</h1>
     }
-}
+
+    @if (isBookingLoaded)
+    {
+        <div class="d-flex flex-column align-items-center justify-content-center text-center" style="margin: 4px">
+            <EditForm Model="@bookingFormData" OnValidSubmit="SaveBooking">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <InputText id="firstName" class="form-control" @bind-Value="bookingFormData.FirstName" />
+                    <ValidationMessage For="@(() => bookingFormData.FirstName)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <InputText id="lastName" class="form-control" @bind-Value="bookingFormData.LastName" />
+                    <ValidationMessage For="@(() => bookingFormData.LastName)" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <InputText id="email" type="email" class="form-control" @bind-Value="bookingFormData.Email" disabled />
+                    <ValidationMessage For="@(() => bookingFormData.Email)" />
+                </div>
+
+                <div>
+                    <label>Choice of Days:</label>
+                    <InputSelect ValueExpression="@(()=>bookingFormData.DayChoice)"
+                    Value="@bookingFormData.DayChoice"
+                    ValueChanged="@((string value) => CalculateTotalPrice(value))">
+                        <option value="">Select booking day(s)...</option>
+                        <option value="4th July 2025">Friday (4th July 2025)</option>
+                        <option value="5th July 2025">Saturday (5th July 2025)</option>
+                        <option value="4th and 5th July 2025">Friday (4th July 2025) and Saturday (5th July 2025)</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => bookingFormData.DayChoice)" />
+                </div>
+                <div>
+                    <label>Total Price:</label>
+                    <span>@totalPrice €</span>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </EditForm>
+        </div>
+        @if (showPopup)
+        {
+            <div class="alert alert-success mt-3">
+                @popupMessage
+            </div>
+        }
+    }
+</article>
 
 @code {
     [Parameter]
@@ -65,11 +87,17 @@
     [Inject]
     public IDynamoDBContext Context { get; set; } = default!;
 
-    private BookingModel booking;
+    [Inject]
+    public IMailService _mailService { get; set; } = default!;
+
+    public Building Building { get; set; } = default!;
+    public Room Room { get; set; } = default!;
+    private BookingModel bookingFormData;
     private Booking existingBooking;
     private bool isBookingLoaded = false;
     private bool showPopup = false;
     private string popupMessage { get; set; } = "Your booking has been successfully updated!";
+    private decimal totalPrice;
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,7 +105,11 @@
         existingBooking = await Context.LoadAsync<Booking>(BuildingId, RoomNumber);
         if (existingBooking != null && existingBooking.Token == Token && existingBooking.Email == Email)
         {
-            booking = new BookingModel() { Email = existingBooking.Email, FirstName = existingBooking.FirstName, LastName = existingBooking.LastName };
+            bookingFormData = new BookingModel() { Email = existingBooking.Email, FirstName = existingBooking.FirstName, LastName = existingBooking.LastName, DayChoice = existingBooking.DayChoice };
+            CalculateTotalPrice(existingBooking.DayChoice);
+            var dataService = new MockDataService();
+            Building = dataService.Buildings.First((x) => x.Id == BuildingId);
+            Room = Building.Rooms.First((x) => x.Number == RoomNumber);
             isBookingLoaded = true;
         }
         else
@@ -87,13 +119,35 @@
         }
     }
 
+    private void CalculateTotalPrice(string dayChoice)
+    {
+        switch (dayChoice)
+        {
+            case "4th July 2025":
+                totalPrice = Room.PricePerNight;
+                break;
+            case "5th July 2025":
+                totalPrice = Room.PricePerNight;
+                break;
+            case "4th and 5th July 2025":
+                totalPrice = Room.PricePerNight + 45;
+                break;
+            default:
+                totalPrice = 0m;
+                break;
+        }
+        bookingFormData.DayChoice = dayChoice;
+    }
+
     private void ClosePopup() { showPopup = false; }
 
     private async Task SaveBooking()
     {
         // Update booking details
-        var updatedBooking = new Booking() { BuildingId = existingBooking.BuildingId, RoomNumber = existingBooking.RoomNumber, FirstName = booking.FirstName, LastName = booking.LastName, Email = booking.Email, Token = existingBooking.Token };
+        var updatedBooking = new Booking() { BuildingId = existingBooking.BuildingId, RoomNumber = existingBooking.RoomNumber, FirstName = bookingFormData.FirstName, LastName = bookingFormData.LastName, Email = bookingFormData.Email, Token = existingBooking.Token, DayChoice = bookingFormData.DayChoice };
         await Context.SaveAsync(updatedBooking);
+        var confirmationEmailRequest = new EmailBuilder().CreateBookingEditEmail(Building, updatedBooking, totalPrice);
+        await _mailService.SendEmailAsync(confirmationEmailRequest);
         popupMessage = "Your booking has been successfully updated!";
         showPopup = true;
     }

@@ -28,7 +28,8 @@ namespace Roomie.Services
             {
                 From = new MailAddress(_gmailSecrets.Email),
                 Subject = sendEmailRequest.Subject,
-                Body = sendEmailRequest.Body
+                Body = sendEmailRequest.Body,
+                IsBodyHtml = true
             };
 
             mailMessage.To.Add(sendEmailRequest.Recipient);
