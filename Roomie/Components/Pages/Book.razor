@@ -119,8 +119,8 @@
     protected override async Task OnInitializedAsync()
     {
         bookings = await Context.ScanAsync<Booking>(default).GetRemainingAsync();
-        var dataService = new MockDataService();
-        Building = dataService.Buildings.First((x) => x.Id == BuildingId);
+        var roomService = new RoomService();
+        Building = roomService.Buildings.First((x) => x.Id == BuildingId);
         Room = Building.Rooms.First((x) => x.Number == RoomNumber);
         await base.OnInitializedAsync();
     }

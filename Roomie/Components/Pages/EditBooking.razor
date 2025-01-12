@@ -107,8 +107,8 @@
         {
             bookingFormData = new BookingModel() { Email = existingBooking.Email, FirstName = existingBooking.FirstName, LastName = existingBooking.LastName, DayChoice = existingBooking.DayChoice };
             CalculateTotalPrice(existingBooking.DayChoice);
-            var dataService = new MockDataService();
-            Building = dataService.Buildings.First((x) => x.Id == BuildingId);
+            var roomService = new RoomService();
+            Building = roomService.Buildings.First((x) => x.Id == BuildingId);
             Room = Building.Rooms.First((x) => x.Number == RoomNumber);
             isBookingLoaded = true;
         }

@@ -87,7 +87,7 @@
     {
         bookings = await Context.ScanAsync<Booking>(default).GetRemainingAsync();
         await base.OnInitializedAsync();
-        var mockDataService = new MockDataService();
-        buildings = mockDataService.Buildings;
+        var roomService = new RoomService();
+        buildings = roomService.Buildings;
     }
 }

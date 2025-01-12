@@ -2,11 +2,11 @@
 
 namespace Roomie.Services
 {
-    public class MockDataService
+    public class RoomService
     {
         public List<Building> Buildings { get; set; } = new();
 
-        public MockDataService()
+        public RoomService()
         {
             // Chateau
             var chateauRooms = new List<Room>()
@@ -25,6 +25,7 @@ namespace Roomie.Services
             };
             var chateauFeatures = new List<string>()
             {
+                "Price for the second night is 45 €.",
                 "Maximum capacity: 15 people (children included).",
                 "Kitchenettes in each room: Every room and suite has a kitchenette, private bathroom, and WC.",
                 "Family-friendly rooms: Rooms 14, 24, and 27 have sofa beds, making them ideal for families with children.",
@@ -61,6 +62,7 @@ namespace Roomie.Services
 
             var internatFeatures = new List<string>()
             {
+                "Price for the second night is 45 €.",
                 "Air-conditioned: All rooms are air-conditioned.",
                 "Private bathrooms: Each room includes a private bathroom and WC.",
                 "Ground floor accessibility: Rooms 1 and 6 are wheelchair accessible.",
